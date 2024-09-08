@@ -87,6 +87,35 @@
     // Update logic goes here (e.g., handling user input, animations)
   }
 
+  function reloadImage(image: HTMLImageElement): void {
+    let scale: number = Math.min(
+      canvas.width / image.width,
+      canvas.height / image.height,
+    );
+    let scaledWidth: number = image.width * scale;
+    let scaledHeight: number = image.height * scale;
+
+    if (scaledHeight > image.height || scaledWidth > image.width) {
+      scale = Math.min(
+        canvas.width / image.width,
+        canvas.height / image.height,
+      );
+    }
+
+    imageObject = {
+      x: (canvas.width - image.width * scale) / 2,
+      y: (canvas.height - image.height * scale) / 2,
+      width: image.width * scale,
+      height: image.height * scale,
+      scale,
+      image,
+    };
+
+    cropWidth = image.width * scale;
+    cropHeight = image.height * scale;
+    recenterCrop();
+  }
+
   function draw(): void {
     if (ctx && imageObject) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -97,8 +126,8 @@
         imageObject.width,
         imageObject.height,
       );
-      ctx.strokeStyle = "#ff7700";
-      ctx.lineWidth = 4;
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 1;
       ctx.strokeRect(cropX, cropY, cropWidth, cropHeight);
     }
   }
@@ -126,10 +155,9 @@
 
     canvas = document.getElementById("cropCanvas") as HTMLCanvasElement;
     ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
 
     window.addEventListener("resize", handleResize);
+    handleResize();
     recenterCrop();
     gameLoop();
 
@@ -254,34 +282,7 @@
         const image: HTMLImageElement = new Image();
         image.src = imageUrl;
         image.onload = () => {
-          let scale: number = Math.min(
-            canvas.width / image.width,
-            canvas.height / image.height,
-          );
-          let scaledWidth: number = image.width * scale;
-          let scaledHeight: number = image.height * scale;
-
-          if (scaledHeight > image.height || scaledWidth > image.width) {
-            scale = Math.min(
-              canvas.width / image.width,
-              canvas.height / image.height,
-            );
-          }
-
-          imageObject = {
-            x: (canvas.width - image.width * scale) / 2,
-            y: (canvas.height - image.height * scale) / 2,
-            width: image.width * scale,
-            height: image.height * scale,
-            scale,
-            image,
-          };
-
-          // set crop width and height to be 100% of the image width and height
-
-          cropWidth = image.width * scale;
-          cropHeight = image.height * scale;
-          recenterCrop();
+          reloadImage(image);
         };
       }
     });
@@ -309,11 +310,14 @@
   });
 
   function handleResize(): void {
-    canvas.width = window.innerWidth;
+    canvas.width = window.innerWidth - 200;
     canvas.height = window.innerHeight;
     // TODO: maybe delay & debounce this
-    recenterImage();
-    recenterCrop();
+    if (imageObject) {
+      reloadImage(imageObject.image);
+      recenterImage();
+      // recenterCrop();
+    }
   }
 
   function setCropAspectRatio(width: number, height: number): void {
@@ -321,54 +325,74 @@
       const isWidthLarger: boolean = width > height;
       const isHeightLarger: boolean = height > width;
 
-      // if image is 1000x1000 and crop is 16x9
-      // dimensions should never be larger than the image dimensions
-      // width = 1000, height = 1000, cropWidth = 1000, cropHeight = ???
-      // cropHeight = (1000 / 16) * 9
-      // cropHeight = 562.5
-
       if (isWidthLarger) {
-        cropHeight = (imageObject.width / width) * height;
-        cropWidth = imageObject.width;
+        cropHeight = (cropWidth / width) * height;
+        cropWidth = cropWidth;
       } else if (isHeightLarger) {
-        cropWidth = (imageObject.height / height) * width;
-        cropHeight = imageObject.height;
+        cropWidth = (cropHeight / height) * width;
+        cropHeight = cropHeight;
+      } else {
+        cropWidth = cropWidth;
+        cropHeight = cropHeight;
       }
-      recenterCrop();
+      // recenterCrop();
     }
   }
 </script>
 
 <main class="bg-[#0f0f0f] overflow-hidden w-screen h-screen">
   <canvas id="cropCanvas" class="absolute top-0 left-0" />
-  <div class=" absolute bottom-0 left-0 flex text-white m-4">
-    <button
-      on:click={handleCrop}
-      class="group hover:bg-[#ff7700] p-2 transition-all rounded overflow-hidden flex flex-col justify-center items-center bg-[#0f0f0f] z-10"
-    >
-      <img
-        src="/floppy-disk.svg"
-        alt="save"
-        class="w-8 h-8 group-hover:invert invert-0 transition-all"
-      />
-    </button>
 
-    <button
-      on:click={() => setCropAspectRatio(16, 9)}
-      class="hover:bg-[#ff7700] p-2 transition-all rounded overflow-hidden flex flex-col justify-center items-center bg-[#0f0f0f] z-10"
-    >
-      16:9
-    </button>
-  </div>
-
-  {#if imageObject}
+  <section
+    id="sidebar"
+    class="w-[200px] max-w-[200px] absolute right-0 top-0 font-mono text-white bg-black bg-opacity-10 h-full p-2 flex justify-between items-center flex-col"
+  >
     <div
-      class="absolute top-0 right-0 flex flex-col text-right text-white bg-gradient-to-bl from-[#0f0f0f] to-transparent p-4"
+      class="w-full transition-all hover:text-[#ff7700] font-bold text-right"
     >
-      <p>{Math.round(cropWidth / (imageObject?.scale || 1))} W</p>
-      <p>{Math.round(cropHeight / (imageObject?.scale || 1))} H</p>
-      <p>{Math.round(cropX)} X</p>
-      <p>{Math.round(cropY)} Y</p>
+      <p>
+        <a href="https://x.com/alia0209">alịa</a>
+      </p>
     </div>
-  {/if}
+
+    <div class="w-full grid gap-4">
+      {#if imageObject}
+        <div
+          class="flex flex-col text-right text-white bg-gradient-to-bl from-[#0f0f0f] to-transparent p-4"
+        >
+          <p>{Math.round(cropWidth / (imageObject?.scale || 1))} W</p>
+          <p>{Math.round(cropHeight / (imageObject?.scale || 1))} H</p>
+          <p>{Math.round(cropX)} X</p>
+          <p>{Math.round(cropY)} Y</p>
+
+          <!-- aspect ratio as x:y simplified (i.e 300:200 -> 3:2)-->
+          <p>
+            {Math.round(cropWidth / (imageObject?.scale || 1)) /
+              Math.round(cropHeight / (imageObject?.scale || 1))}
+          </p>
+        </div>
+        <div class="bg-opacity-40 bg-black p-2 w-full">
+          <p class="pb-2">Aspect Ratio</p>
+
+          <div class="grid grid-cols-2 gap-2">
+            {#each [[16, 9], [4, 3], [1, 1], [3, 4], [9, 16]] as [w, h]}
+              <button
+                on:click={() => setCropAspectRatio(w, h)}
+                class="hover:bg-[#ff7700] p-2 transition-all rounded overflow-hidden flex flex-col justify-center items-center bg-[#0f0f0f] z-10"
+              >
+                {w}:{h}
+              </button>
+            {/each}
+          </div>
+        </div>
+        <button
+          on:click={handleCrop}
+          class="group p-2 w-full transition-all rounded overflow-hidden hover:invert invert-0 flex justify-between items-center bg-[#0f0f0f] z-10"
+        >
+          <p>download</p>
+          <img src="/floppy-disk.svg" alt="save" class="w-8 h-8" />
+        </button>
+      {/if}
+    </div>
+  </section>
 </main>
