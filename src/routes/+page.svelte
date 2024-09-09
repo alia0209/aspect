@@ -29,7 +29,10 @@
   let aspectRatioY: number = 1;
   let aspectRatioString: string = "1:1";
 
-  const SIDEBAR_WIDTH: number = 200;
+  let customAspectRatioX: number = 1;
+  let customAspectRatioY: number = 1;
+
+  let imageTitle: string = "cropped_image";
 
   function handleCrop(): void {
     if (ctx && imageObject) {
@@ -74,7 +77,7 @@
         const croppedImageUrl: string = croppedCanvas.toDataURL("image/jpeg");
         const link: HTMLAnchorElement = document.createElement("a");
         link.href = croppedImageUrl;
-        link.download = "cropped_image.jpg";
+        link.download = `r(${aspectRatioX};${aspectRatioY})-${imageTitle}.jpg`;
         link.click();
       }
     }
@@ -279,6 +282,13 @@
           default:
             break;
         }
+
+        if (cropWidth < 4) {
+          cropWidth = 4;
+        }
+        if (cropHeight < 4) {
+          cropHeight = 4;
+        }
         dragStartX = x;
         dragStartY = y;
       }
@@ -297,6 +307,11 @@
         const image: HTMLImageElement = new Image();
         image.src = imageUrl;
         image.onload = () => {
+          let imageWithoutExtension: string = file.name.slice(
+            0,
+            file.name.lastIndexOf("."),
+          );
+          imageTitle = imageWithoutExtension || "cropped_image";
           reloadImage(image);
         };
       }
@@ -351,6 +366,9 @@
         cropHeight = cropWidth;
       }
     }
+
+    aspectRatioX = width;
+    aspectRatioY = height;
   }
 
   function calculateAspectRatio(width: number, height: number): string {
@@ -430,7 +448,7 @@
           </div>
 
           <div class="grid grid-cols-2 gap-2">
-            {#each [[16, 9], [4, 3], [1, 1], [3, 4], [9, 16]] as [w, h]}
+            {#each [[16, 9], [4, 3], [3, 4], [9, 16], [5, 2]] as [w, h]}
               <button
                 on:click={() => setCropAspectRatio(w, h)}
                 class="hover:bg-white hover:text-black p-2 transition-all rounded overflow-hidden flex flex-col justify-center items-center bg-[#0f0f0f] z-10"
@@ -438,14 +456,43 @@
                 {w}:{h}
               </button>
             {/each}
+            <button
+              on:click={() =>
+                setCropAspectRatio(customAspectRatioX, customAspectRatioY)}
+              class="hover:bg-white hover:text-black p-2 transition-all rounded overflow-hidden flex flex-col justify-center items-center bg-[#0f0f0f] z-10"
+            >
+              {customAspectRatioX}:{customAspectRatioY}
+            </button>
+            <div class="col-span-2">
+              <p>
+                manual <span class="text-sm font-bold text-gray-600"
+                  >( w : h )</span
+                >
+              </p>
+            </div>
+            <div class="col-span-2">
+              <!-- inputs for custom x/y -->
+              <div class="flex gap-2">
+                <input
+                  type="number"
+                  class="w-1/2 p-2 bg-[#0f0f0f] text-white rounded"
+                  bind:value={customAspectRatioX}
+                />
+                <input
+                  type="number"
+                  class="w-1/2 p-2 bg-[#0f0f0f] text-white rounded"
+                  bind:value={customAspectRatioY}
+                />
+              </div>
+            </div>
           </div>
         </div>
         <button
           on:click={handleCrop}
-          class="group p-2 w-full transition-all rounded overflow-hidden hover:invert invert-0 flex justify-between items-center bg-[#0f0f0f] z-10"
+          class="group p-2 w-full transition-all rounded overflow-hidden hover:invert invert-0 flex justify-between items-center bg-[#ff7700] z-10"
         >
           <p>download</p>
-          <img src="/save.svg" alt="save" class="w-8 h-8" />
+          <img src="/save.svg" alt="save" class="w-4 h-4" />
         </button>
       {/if}
     </div>
