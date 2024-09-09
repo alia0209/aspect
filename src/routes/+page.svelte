@@ -21,16 +21,29 @@
   let animationFrameId: number;
   let windowRef: Window | null = null;
 
+  let glowSpeed: number = 0.005;
+  let glow: number = 1;
+  let glowDirection: number = glowSpeed;
+
+  const SIDEBAR_WIDTH: number = 200;
+
   function handleCrop(): void {
     if (ctx && imageObject) {
+      // gap between canvas edge and image
+      const canvasOffsetX: number = (canvas.width - imageObject.width) / 2;
+      const canvasOffsetY: number = (canvas.height - imageObject.height) / 2;
+
+      const cropOffsetX: number = cropX - canvasOffsetX;
+      const cropOffsetY: number = cropY - canvasOffsetY;
+
       const croppedCanvas: HTMLCanvasElement = document.createElement("canvas");
       croppedCanvas.width = cropWidth / imageObject.scale;
       croppedCanvas.height = cropHeight / imageObject.scale;
       const croppedCtx: CanvasRenderingContext2D | null =
         croppedCanvas.getContext("2d");
       if (croppedCtx) {
-        const scaledCropX = cropX / imageObject.scale;
-        const scaledCropY = cropY / imageObject.scale;
+        const scaledCropX = cropOffsetX / imageObject.scale;
+        const scaledCropY = cropOffsetY / imageObject.scale;
         const scaledCropWidth = cropWidth / imageObject.scale;
         const scaledCropHeight = cropHeight / imageObject.scale;
 
@@ -84,7 +97,13 @@
   }
 
   function update(): void {
-    // Update logic goes here (e.g., handling user input, animations)
+    if (glow >= 1) {
+      glowDirection = -glowSpeed;
+    } else if (glow <= 0.5) {
+      glowDirection = glowSpeed;
+    }
+
+    glow += glowDirection;
   }
 
   function reloadImage(image: HTMLImageElement): void {
@@ -126,9 +145,22 @@
         imageObject.width,
         imageObject.height,
       );
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${glow})`;
+      ctx.lineWidth = 0.5 + 2 * glow;
       ctx.strokeRect(cropX, cropY, cropWidth, cropHeight);
+
+      // top overlay mask
+      ctx.fillStyle = `rgba(0, 0, 0, 0.5)`;
+      ctx.fillRect(0, 0, canvas.width, cropY);
+
+      // bottom overlay mask
+      ctx.fillRect(0, cropY + cropHeight, canvas.width, canvas.height);
+
+      // left overlay mask
+      ctx.fillRect(0, cropY, cropX, cropHeight);
+
+      // right overlay mask
+      ctx.fillRect(cropX + cropWidth, cropY, canvas.width, cropHeight);
     }
   }
 
@@ -345,7 +377,7 @@
 
   <section
     id="sidebar"
-    class="w-[200px] max-w-[200px] absolute right-0 top-0 font-mono text-white bg-black bg-opacity-10 h-full p-2 flex justify-between items-center flex-col"
+    class="w-[200px] max-w-[200px] absolute right-0 top-0 font-mono text-white bg-black bg-opacity-10 h-full p-2 flex justify-between items-center flex-col border-l border-white"
   >
     <div
       class="w-full transition-all hover:text-[#ff7700] font-bold text-right"
