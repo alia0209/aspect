@@ -378,7 +378,7 @@
             {#each [[16, 9], [4, 3], [1, 1], [3, 4], [9, 16]] as [w, h]}
               <button
                 on:click={() => setCropAspectRatio(w, h)}
-                class="hover:bg-[#ff7700] p-2 transition-all rounded overflow-hidden flex flex-col justify-center items-center bg-[#0f0f0f] z-10"
+                class="hover:bg-white p-2 transition-all rounded overflow-hidden flex flex-col justify-center items-center bg-[#0f0f0f] z-10"
               >
                 {w}:{h}
               </button>
