@@ -364,7 +364,9 @@
     };
 
     const divisor = gcd(width, height);
-    return `${width / divisor}:${height / divisor}`;
+    aspectRatioX = width / divisor;
+    aspectRatioY = height / divisor;
+    return `${aspectRatioX}:${aspectRatioY}`;
   }
 
   $: {
@@ -372,12 +374,12 @@
   }
 </script>
 
-<main class="bg-[#0f0f0f] overflow-hidden w-screen h-screen">
+<main class="bg-[#0f0f0f] overflow-hidden w-screen h-screen font-mono">
   <canvas id="cropCanvas" class="absolute top-0 left-0" />
 
   <section
     id="sidebar"
-    class="w-[200px] max-w-[200px] absolute right-0 top-0 font-mono text-white bg-black bg-opacity-10 h-full p-2 flex justify-between items-center flex-col border-l border-white"
+    class="w-[200px] max-w-[200px] absolute right-0 top-0 text-white bg-black bg-opacity-10 h-full p-2 flex justify-between items-center flex-col border-l border-white"
   >
     <div
       class="w-full transition-all hover:text-[#ff7700] font-bold text-right flex justify-end items-center"
@@ -436,11 +438,6 @@
                 {w}:{h}
               </button>
             {/each}
-
-            <p class="col-span-2 flex justify-between p-2 text-xs">
-              <span>current:</span>
-              <span>{aspectRatioString}</span>
-            </p>
           </div>
         </div>
         <button
@@ -453,4 +450,13 @@
       {/if}
     </div>
   </section>
+
+  {#if !imageObject}
+    <div
+      class="w-full fixed top-0 right-[200px] h-full bg-black bg-opacity-60 flex flex-col justify-center items-center text-center text-white bg-gradient-to-bl pl-[200px]"
+    >
+      <p class="text-xs font-bold">desktop only</p>
+      <p class="text-lg">drop image to begin</p>
+    </div>
+  {/if}
 </main>
