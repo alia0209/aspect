@@ -25,6 +25,10 @@
   let glow: number = 1;
   let glowDirection: number = glowSpeed;
 
+  let aspectRatioX: number = 1;
+  let aspectRatioY: number = 1;
+  let aspectRatioString: string = "1:1";
+
   const SIDEBAR_WIDTH: number = 200;
 
   function handleCrop(): void {
@@ -46,26 +50,6 @@
         const scaledCropY = cropOffsetY / imageObject.scale;
         const scaledCropWidth = cropWidth / imageObject.scale;
         const scaledCropHeight = cropHeight / imageObject.scale;
-
-        console.table(imageObject.image);
-        console.table({
-          x: imageObject.x,
-          y: imageObject.y,
-          width: imageObject.width,
-          height: imageObject.height,
-          scale: imageObject.scale,
-        });
-
-        console.table({
-          cropX,
-          cropY,
-          cropWidth,
-          cropHeight,
-          scaledCropX,
-          scaledCropY,
-          scaledCropWidth,
-          scaledCropHeight,
-        });
 
         croppedCtx.drawImage(
           // original image
@@ -249,7 +233,6 @@
         const y: number = event.offsetY;
         const dx: number = x - dragStartX;
         const dy: number = y - dragStartY;
-        console.log(dragHandle);
 
         switch (dragHandle) {
           case "left":
@@ -365,10 +348,27 @@
         cropHeight = cropHeight;
       } else {
         cropWidth = cropWidth;
-        cropHeight = cropHeight;
+        cropHeight = cropWidth;
       }
-      // recenterCrop();
     }
+  }
+
+  function calculateAspectRatio(width: number, height: number): string {
+    const gcd = (a: number, b: number): number => {
+      while (b !== 0) {
+        const temp = b;
+        b = a % b;
+        a = temp;
+      }
+      return a;
+    };
+
+    const divisor = gcd(width, height);
+    return `${width / divisor}:${height / divisor}`;
+  }
+
+  $: {
+    aspectRatioString = calculateAspectRatio(cropWidth, cropHeight);
   }
 </script>
 
@@ -380,41 +380,67 @@
     class="w-[200px] max-w-[200px] absolute right-0 top-0 font-mono text-white bg-black bg-opacity-10 h-full p-2 flex justify-between items-center flex-col border-l border-white"
   >
     <div
-      class="w-full transition-all hover:text-[#ff7700] font-bold text-right"
+      class="w-full transition-all hover:text-[#ff7700] font-bold text-right flex justify-end items-center"
     >
-      <p>
-        <a href="https://x.com/alia0209">alịa</a>
-      </p>
+      <a href="https://x.com/alia0209">
+        <span>alịa</span>
+        <svg
+          viewBox="0 0 24 24"
+          width="24px"
+          height="24px"
+          class="inline-block fill-current"
+        >
+          ><g
+            ><path
+              d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+            ></path></g
+          ></svg
+        >
+      </a>
     </div>
 
     <div class="w-full grid gap-4">
       {#if imageObject}
-        <div
-          class="flex flex-col text-right text-white bg-gradient-to-bl from-[#0f0f0f] to-transparent p-4"
-        >
-          <p>{Math.round(cropWidth / (imageObject?.scale || 1))} W</p>
-          <p>{Math.round(cropHeight / (imageObject?.scale || 1))} H</p>
-          <p>{Math.round(cropX)} X</p>
-          <p>{Math.round(cropY)} Y</p>
-
-          <!-- aspect ratio as x:y simplified (i.e 300:200 -> 3:2)-->
-          <p>
-            {Math.round(cropWidth / (imageObject?.scale || 1)) /
-              Math.round(cropHeight / (imageObject?.scale || 1))}
-          </p>
+        <div class="flex flex-col text-right text-white bg-gradient-to-bl">
+          <div class="grid grid-cols-2 w-full text-center gap-2">
+            <p class="font-bold text-xs">W</p>
+            <p class="font-bold text-xs">H</p>
+            <p>{(cropWidth / (imageObject?.scale || 1)).toFixed(1)}</p>
+            <p>{(cropHeight / (imageObject?.scale || 1)).toFixed(1)}</p>
+            <p class="font-bold text-xs">X</p>
+            <p class="font-bold text-xs">Y</p>
+            <p>{cropX.toFixed(1)}</p>
+            <p>{cropY.toFixed(1)}</p>
+          </div>
         </div>
         <div class="bg-opacity-40 bg-black p-2 w-full">
-          <p class="pb-2">Aspect Ratio</p>
+          <div class="flex justify-between items-center pb-2">
+            <p>aspect ratio</p>
+            <button
+              on:click={() => {
+                cropWidth = imageObject?.width || 200;
+                cropHeight = imageObject?.height || 200;
+                recenterCrop();
+              }}
+            >
+              <img src="/reset.svg" alt="reset" />
+            </button>
+          </div>
 
           <div class="grid grid-cols-2 gap-2">
             {#each [[16, 9], [4, 3], [1, 1], [3, 4], [9, 16]] as [w, h]}
               <button
                 on:click={() => setCropAspectRatio(w, h)}
-                class="hover:bg-white p-2 transition-all rounded overflow-hidden flex flex-col justify-center items-center bg-[#0f0f0f] z-10"
+                class="hover:bg-white hover:text-black p-2 transition-all rounded overflow-hidden flex flex-col justify-center items-center bg-[#0f0f0f] z-10"
               >
                 {w}:{h}
               </button>
             {/each}
+
+            <p class="col-span-2 flex justify-between p-2 text-xs">
+              <span>current:</span>
+              <span>{aspectRatioString}</span>
+            </p>
           </div>
         </div>
         <button
@@ -422,7 +448,7 @@
           class="group p-2 w-full transition-all rounded overflow-hidden hover:invert invert-0 flex justify-between items-center bg-[#0f0f0f] z-10"
         >
           <p>download</p>
-          <img src="/floppy-disk.svg" alt="save" class="w-8 h-8" />
+          <img src="/save.svg" alt="save" class="w-8 h-8" />
         </button>
       {/if}
     </div>
