@@ -1,7 +1,12 @@
 {
 	"name": "aspect",
-	"version": "0.0.1",
-	"private": true,
+	"version": "1.0.0",
+	"author": {
+		"name": "alia",
+		"email": "root@alia.fyi",
+		"url": "https://alia.fyi"
+	},
+	"license": "MIT",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",

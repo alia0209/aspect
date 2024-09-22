@@ -1,38 +1,35 @@
-# create-svelte
+# aspect
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+a desktop only web application for exporting images of a user defined aspect ratio
 
-## Creating a project
+this was hacked together in a few hours, no guarantee of code quality or best practices, assume the whole thing is held together with duct tape and string
 
-If you're seeing this, you've probably already done this step. Congrats!
+usable at: [aspect.alia.tools](https://aspect.alia.tools)
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+## local development
 
-# create a new project in my-app
-npm create svelte@latest my-app
+relies on [bun](https://bun.sh)
+
+```sh
+curl -fsSL https://bun.sh/install | bash
 ```
 
-## Developing
+after bun is installed it is a case of running:
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+```sh
+# install dependencies
+bun i
 
-```bash
-npm run dev
+# boot the dev server
+bun run dev
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+# build the project
+bun run build
 ```
 
-## Building
+stack:
 
-To create a production version of your app:
+- svelte/kit w/ typescript support
+- tailwind
 
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+deployment uses svelte/kit's static adapter, so builds are output as totally static and nothing is server rendered etc. you can host this anywhere that can hold a html file
